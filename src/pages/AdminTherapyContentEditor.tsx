@@ -16,6 +16,12 @@ import {
 import CBTThoughtRecordsEditor from '../components/therapy-editors/CBTThoughtRecordsEditor';
 import MindfulnessBreathingEditor from '../components/therapy-editors/MindfulnessBreathingEditor';
 import RelaxationMusicEditor from '../components/therapy-editors/RelaxationMusicEditor';
+import VideoTherapyEditor from '../components/therapy-editors/VideoTherapyEditor';
+import StressManagementEditor from '../components/therapy-editors/StressManagementEditor';
+import GratitudeEditor from '../components/therapy-editors/GratitudeEditor';
+import ExposureTherapyEditor from '../components/therapy-editors/ExposureTherapyEditor';
+import SimpleContentEditor from '../components/therapy-editors/SimpleContentEditor';
+import { getTherapyTypeFromTherapy } from '../utils/therapyTypeMapper';
 
 const therapyTypeOptions: { value: keyof TherapyContentData; label: string }[] = [
   { value: 'cbt_thought_records', label: 'CBT Thought Records' },
@@ -74,6 +80,8 @@ function AdminTherapyContentEditor() {
           status: found.status
         });
 
+        const inferredType = getTherapyTypeFromTherapy(found.title, found.category);
+
         const content = getTherapyContent(id);
         if (content) {
           setTherapyType(content.therapyType);
@@ -81,7 +89,8 @@ function AdminTherapyContentEditor() {
           setContentId(content.id);
           setIsPublished(content.isPublished);
         } else {
-          setContentData(getDefaultContentForType(therapyType));
+          setTherapyType(inferredType);
+          setContentData(getDefaultContentForType(inferredType));
         }
       }
     }
@@ -146,6 +155,44 @@ function AdminTherapyContentEditor() {
       case 'relaxation_music':
         return (
           <RelaxationMusicEditor
+            data={contentData}
+            onChange={setContentData}
+          />
+        );
+      case 'video_therapy':
+        return (
+          <VideoTherapyEditor
+            data={contentData}
+            onChange={setContentData}
+          />
+        );
+      case 'stress_management':
+        return (
+          <StressManagementEditor
+            data={contentData}
+            onChange={setContentData}
+          />
+        );
+      case 'gratitude':
+        return (
+          <GratitudeEditor
+            data={contentData}
+            onChange={setContentData}
+          />
+        );
+      case 'exposure_therapy':
+        return (
+          <ExposureTherapyEditor
+            data={contentData}
+            onChange={setContentData}
+          />
+        );
+      case 'art_therapy':
+      case 'tetris_therapy':
+      case 'act_therapy':
+        return (
+          <SimpleContentEditor
+            therapyType={therapyType as 'art_therapy' | 'tetris_therapy' | 'act_therapy'}
             data={contentData}
             onChange={setContentData}
           />
@@ -350,7 +397,13 @@ function AdminTherapyContentEditor() {
                   </label>
                   <select
                     value={therapyType}
-                    onChange={(e) => setTherapyType(e.target.value as keyof TherapyContentData)}
+                    onChange={(e) => {
+                      const newType = e.target.value as keyof TherapyContentData;
+                      setTherapyType(newType);
+                      if (!contentData || Object.keys(contentData).length === 0) {
+                        setContentData(getDefaultContentForType(newType));
+                      }
+                    }}
                     className="w-full md:w-96 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {therapyTypeOptions.map((option) => (
@@ -359,6 +412,9 @@ function AdminTherapyContentEditor() {
                       </option>
                     ))}
                   </select>
+                  <p className="text-gray-400 text-sm mt-2">
+                    The therapy type determines which editor interface is displayed below. It should match the therapy's category.
+                  </p>
                 </div>
 
                 <div className="border-t border-gray-700 pt-6">
